@@ -20,5 +20,5 @@ $plugin->version  = 2014101000;   // The (date) version of this module + 2 extra
                                   // display this version number with userdate (dev friendly)
 $plugin->requires = 2012120300;   // Requires this Moodle version - at least 2.0
 $plugin->cron     = 0;
-$plugin->release = '0.1';
-$plugin->maturity = MATURITY_ALPHA;
+$plugin->release = 'v1.0';
+$plugin->maturity = MATURITY_STABLE;
