@@ -52,59 +52,68 @@ class local_question_ws_external extends external_api {
 		$module_leader_role = $DB->get_record('role', array('shortname'=>'course_leader'), 'id', MUST_EXIST);
 
 		// Build and execute course query
-		$curr_month = date('n');
-		$curr_year = date('y');
-
-		$shortname_search = '%';
-
-		//$curr_month = 1;
-
-		if ($curr_month >= 9) {
-			// We're in semester 1
-			$run_start_month = 'SEP';
-		} else if ($curr_month < 6) {
-			// We're in semester 2
-			$run_start_month = 'JAN';
-		} else {
-			// We're in semester 3
-			$run_start_month = 'MAY';
-		}
-
-		$shortname_search .= $run_start_month . $curr_year . '-%';
-
-		$sql 	= 'SELECT c.id, c.fullname '
+		$sql	= 'SELECT '
+			. ' c.id,'
+			. ' c.fullname,'
+			. ' substr(c.shortname,8,3) as startmonth,'
+			. ' substr(c.shortname,11,2) as startyear,'
+			. ' substr(c.shortname,14,3) as endmonth,'
+			. ' substr(c.shortname,17,2) as endyear '
 			. 'FROM {course} c '
 			. 'JOIN {enrol} e ON e.courseid = c.id '
 			. 'JOIN {user_enrolments} ue ON ue.enrolid = e.id '
-			. 'WHERE c.shortname LIKE ? AND ue.userid = ? AND c.visible = 1';
-		$db_ret = $DB->get_records_sql($sql, array($shortname_search, $USER->id));
+			. 'WHERE ue.userid = ? AND c.visible = 1 AND length(c.shortname) = 18';
+		$db_ret = $DB->get_records_sql($sql, array($USER->id));
 
 		$courses = array();
 		foreach ($db_ret as $row) {
-			$context = context_course::instance($row->id);
-			if (is_enrolled($context)) {
-				// Check whether current user is a module leader
-				$module_leaders = get_role_users($module_leader_role->id, $context, false, 'u.id');
-				$is_module_leader = false;
-				foreach ($module_leaders as $module_leader) {
-					if ($module_leader->id == $USER->id) {
-						$is_module_leader = true;
-						break;
-					}
-				}
+			// Check whether course is currently running
+			$course_start_timestamp = strtotime(
+				'01 ' .
+				$row->startmonth . ' ' .
+				$row->startyear
+			);
 
-				$run_dates_search = '(' . $run_start_month;
-				$run_dates_pos = strpos($row->fullname, $run_dates_search);
-				if ($run_dates_pos !== false) {
-					$row->fullname = substr($row->fullname, 0, $run_dates_pos - 1);
-				}
+			$course_end_timestamp = strtotime(
+				'31 ' .
+				$row->endmonth . ' ' .
+				$row->endyear
+			);
 
-				$courses[] = array(
-					'course_id' => $row->id,
-					'course_fullname' => $row->fullname,
-					'is_module_leader' => $is_module_leader
-				);
+			$currtime = time();
+
+			if ($currtime < $course_start_timestamp || $currtime > $course_end_timestamp) {
+				continue;
 			}
+
+			$context = context_course::instance($row->id);
+			if (!is_enrolled($context)) {
+				// If we've got here something's wrong with the enrolments on this course, skip it
+				continue;
+			}
+
+			// Check whether current user is a module leader
+			$module_leaders = get_role_users($module_leader_role->id, $context, false, 'u.id');
+			$is_module_leader = false;
+			foreach ($module_leaders as $module_leader) {
+				if ($module_leader->id == $USER->id) {
+					$is_module_leader = true;
+					break;
+				}
+			}
+
+			// Remove run dates from course title
+			$run_dates_search = '(' . $row->startmonth;
+			$run_dates_pos = strpos($row->fullname, $run_dates_search);
+			if ($run_dates_pos !== false) {
+				$row->fullname = substr($row->fullname, 0, $run_dates_pos - 1);
+			}
+
+			$courses[] = array(
+				'course_id' => $row->id,
+				'course_fullname' => $row->fullname,
+				'is_module_leader' => $is_module_leader
+			);
 		}
 
 		return $courses;
