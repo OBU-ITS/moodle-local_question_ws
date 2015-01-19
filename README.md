@@ -1,4 +1,4 @@
-moodle-question-ws
+moodle-local_question-ws
 ==================
 
 A Moodle plugin that provides a web service to create questions forums in courses and to create posts within these forums.
