@@ -62,7 +62,12 @@ class local_question_ws_external extends external_api {
 			. 'FROM {course} c '
 			. 'JOIN {enrol} e ON e.courseid = c.id '
 			. 'JOIN {user_enrolments} ue ON ue.enrolid = e.id '
-			. 'WHERE ue.userid = ? AND c.visible = 1 AND length(c.shortname) = 18';
+			. 'WHERE'
+			. ' ue.userid = ? AND'
+			. ' c.visible = 1 AND'
+			. " substr(c.shortname, 7, 1) = ' ' AND"
+			. " substr(c.shortname, 13, 1) = '-' AND"
+			. ' length(c.shortname) >= 18';
 		$db_ret = $DB->get_records_sql($sql, array($USER->id));
 
 		$courses = array();
