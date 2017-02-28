@@ -13,8 +13,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 $plugin->component = 'local_question_ws'; // Full name of the plugin (used for diagnostics): plugintype_pluginname
-$plugin->version  = 2016062300;   // The (date) version of this module + 2 extra digital for daily versions
+$plugin->version  = 2017022700;   // The (date) version of this module + 2 extra digital for daily versions
 $plugin->requires = 2012120300;   // Requires this Moodle version - at least 2.0
 $plugin->cron     = 0;
-$plugin->release = 'v1.1.3';
+$plugin->release = 'v1.1.4';
 $plugin->maturity = MATURITY_STABLE;

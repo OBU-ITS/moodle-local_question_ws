@@ -276,8 +276,7 @@ class local_question_ws_external extends external_api {
 		$DB->set_field('course_modules', 'instance', $newcm->instance, array('id'=>$newcm->coursemodule));
 
 		// Add module to section
-		$section_id = add_mod_to_section($newcm);
-		$DB->set_field('course_modules', 'section', $section_id, array('id'=>$newcm->coursemodule));
+		$section_id = course_add_cm_to_section($newcm->course, $newcm->coursemodule, $newcm->section);
 		
 		// Trigger mod_created event with information about this module
 		$eventname = 'mod_created';
@@ -288,9 +287,6 @@ class local_question_ws_external extends external_api {
 		$eventdata->courseid   = $course->id;
 		$eventdata->userid     = 0;
 		events_trigger($eventname, $eventdata);
-
-		// Rebuild course cache
-		rebuild_course_cache($course->id);
 
 		return array('forum_id' => $ret);
 	}
