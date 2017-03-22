@@ -372,7 +372,8 @@ class local_question_ws_external extends external_api {
 				array(
 					'question_id' => new external_value(PARAM_INT, 'Question ID'),
 					'question_text' => new external_value(PARAM_TEXT, 'Question text'),
-					'user_full_name' => new external_value(PARAM_TEXT, 'User full name')
+					'user_full_name' => new external_value(PARAM_TEXT, 'User full name'),
+					'answers' => new external_value(PARAM_INT, 'Number of Answers'),
 				)
 			)
 		);
@@ -408,10 +409,12 @@ class local_question_ws_external extends external_api {
 
 		$questions = array();
 		foreach ($discussions as $discussion) {
+			$answers = self::get_answers($discussion->discussion);
 			$questions[] = array(
 				'question_id' => $discussion->discussion,
 				'question_text' => strip_tags($discussion->message),
-				'user_full_name' => $discussion->firstname . ' ' . $discussion->lastname
+				'user_full_name' => $discussion->firstname . ' ' . $discussion->lastname,
+				'answers' => count($answers)
 			);
 		}
 

@@ -50,7 +50,7 @@ $functions = array(
                 'classname'   => 'local_question_ws_external',
                 'methodname'  => 'get_questions',
                 'classpath'   => 'local/question_ws/externallib.php',
-                'description' => 'Returns array of questions (question_id, question text, user full name). forum_id is passed in as parameter.',
+                'description' => 'Returns array of questions (question_id, question text, user full name, number of answers). forum_id is passed in as parameter.',
                 'type'        => 'read',
 		'capabilities'=> 'mod/forum:viewdiscussion'
         ),
