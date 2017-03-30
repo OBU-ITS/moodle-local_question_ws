@@ -50,7 +50,7 @@ $functions = array(
                 'classname'   => 'local_question_ws_external',
                 'methodname'  => 'get_questions',
                 'classpath'   => 'local/question_ws/externallib.php',
-                'description' => 'Returns array of questions (question_id, question text, user full name, number of answers). forum_id is passed in as parameter.',
+                'description' => 'Returns array of questions (question_id, question text, user full name, modified time, number of answers). forum_id is passed in as parameter.',
                 'type'        => 'read',
 		'capabilities'=> 'mod/forum:viewdiscussion'
         ),
@@ -58,7 +58,7 @@ $functions = array(
                 'classname'   => 'local_question_ws_external',
                 'methodname'  => 'ask_question',
                 'classpath'   => 'local/question_ws/externallib.php',
-                'description' => 'Adds new question to forum. forum_id, question_text, and anonymous flag are passed in as parameters. Returns question_id. Anonymous user is used to ask question if anonymous flag is set.',
+                'description' => 'Adds new question to forum. forum_id, question_text and (optional) anonymous flag are passed in as parameters. Returns question_id. Anonymous user is used to ask question if anonymous flag is present and set.',
                 'type'        => 'write',
 		'capabilities'=> 'mod/forum:startdiscussion'
         ),
@@ -74,7 +74,7 @@ $functions = array(
                 'classname'   => 'local_question_ws_external',
                 'methodname'  => 'answer_question',
                 'classpath'   => 'local/question_ws/externallib.php',
-                'description' => 'Answer question in forum. question_id and answer_text are passed in as parameters',
+                'description' => 'Answer question in forum. question_id, answer_text and (optional) anonymous flag are passed in as parameters.  Anonymous user is used to answer question if anonymous flag is present and set.',
                 'type'        => 'write',
 		'capabilities'=> 'mod/forum:replypost'
         ),
@@ -82,7 +82,7 @@ $functions = array(
                 'classname'   => 'local_question_ws_external',
                 'methodname'  => 'get_answers',
                 'classpath'   => 'local/question_ws/externallib.php',
-                'description' => 'Get answers to question. Returns array of answer_text, user full name. question_id is passed in as a parameter',
+                'description' => 'Get answers to question. Returns array of answer_text, user full name, modified time. question_id is passed in as a parameter',
                 'type'        => 'read',
 		'capabilities'=> 'mod/forum:viewdiscussion'
         )

@@ -169,11 +169,11 @@ class local_question_ws_external extends external_api {
 			}
 		}
 
-        	// Context validation
+        // Context validation
 		$context = context_course::instance($params['course_id']);
 		self::validate_context($context);
 
-	        // Capability checking
+	    // Capability checking
 		require_capability('moodle/course:manageactivities', $context);
 		require_capability('moodle/course:activityvisibility', $context);
 		require_capability('mod/forum:addinstance', $context);
@@ -373,7 +373,8 @@ class local_question_ws_external extends external_api {
 					'question_id' => new external_value(PARAM_INT, 'Question ID'),
 					'question_text' => new external_value(PARAM_TEXT, 'Question text'),
 					'user_full_name' => new external_value(PARAM_TEXT, 'User full name'),
-					'answers' => new external_value(PARAM_INT, 'Number of Answers'),
+					'time_modified' => new external_value(PARAM_INT, 'Time modified'),
+					'answers' => new external_value(PARAM_INT, 'Number of answers')
 				)
 			)
 		);
@@ -414,6 +415,7 @@ class local_question_ws_external extends external_api {
 				'question_id' => $discussion->discussion,
 				'question_text' => strip_tags($discussion->message),
 				'user_full_name' => $discussion->firstname . ' ' . $discussion->lastname,
+				'time_modified' => $discussion->timemodified,
 				'answers' => count($answers)
 			);
 		}
@@ -427,7 +429,7 @@ class local_question_ws_external extends external_api {
 			array(
 				'forum_id' => new external_value(PARAM_INT, 'ID of forum in which to create question'),
 				'question_text' => new external_value(PARAM_TEXT, 'Question text'),
-				'anonymous' => new external_value(PARAM_BOOL, 'If true question is asked with anonymous user')
+				'anonymous' => new external_value(PARAM_BOOL, 'If true, question is asked with anonymous user', VALUE_OPTIONAL)
 			)
 		);
 	}
@@ -442,7 +444,7 @@ class local_question_ws_external extends external_api {
 	}
 
 
-	public static function ask_question($forum_id, $question_text, $anonymous) {
+	public static function ask_question($forum_id, $question_text, $anonymous=false) {
 		global $CFG, $DB, $USER;
 
 		// Parameter validation
@@ -548,7 +550,8 @@ class local_question_ws_external extends external_api {
 		return new external_function_parameters(
 			array(
 				'question_id' => new external_value(PARAM_INT, 'ID of question to answer'),
-				'answer_text' => new external_value(PARAM_TEXT, 'Answer text')
+				'answer_text' => new external_value(PARAM_TEXT, 'Answer text'),
+				'anonymous' => new external_value(PARAM_BOOL, 'If true, question is answered with anonymous user', VALUE_OPTIONAL)
 			)
 		);
 	}
@@ -559,14 +562,15 @@ class local_question_ws_external extends external_api {
 	}
 
 
-	public static function answer_question($question_id, $answer_text) {
+	public static function answer_question($question_id, $answer_text, $anonymous=false) {
 		global $DB, $USER;
 
 		// Parameter validation
 		$params = self::validate_parameters(
 				self::answer_question_parameters(), array(
 					'question_id' => $question_id,
-					'answer_text' => $answer_text
+					'answer_text' => $answer_text,
+					'anonymous' => $anonymous
 				)
 		);
 
@@ -582,17 +586,23 @@ class local_question_ws_external extends external_api {
 		$cm         = get_coursemodule_from_instance('forum', $forum->id);
 
 
-        	// Context validation
+        // Context validation
 		$context    = context_module::instance($cm->id);
 		self::validate_context($context);
 
-	        // Capability checking
+	    // Capability checking
 		require_capability('mod/forum:replypost', $context);
+
+		if ($anonymous) {
+			$user = $DB->get_record('user', array('username' => 'anonquestion'), 'id', MUST_EXIST);
+		} else {
+			$user = $USER;
+		}
 
 		$post = new stdClass();
 		$post->discussion = $discussion->id;
 		$post->parent = $discussion->firstpost;
-		$post->userid = $USER->id;		
+		$post->userid = $user->id;		
 		$post->created = $post->modified = time();
 		$post->mailed     = "0";
 		$post->attachment = "";
@@ -618,7 +628,8 @@ class local_question_ws_external extends external_api {
 			new external_single_structure(
 				array(
 					'answer_text' => new external_value(PARAM_TEXT, 'Answer text'),
-					'user_full_name' => new external_value(PARAM_TEXT, 'User full name')
+					'user_full_name' => new external_value(PARAM_TEXT, 'User full name'),
+					'time_modified' => new external_value(PARAM_INT, 'Time modified')
 				)
 			)
 		);
@@ -650,7 +661,7 @@ class local_question_ws_external extends external_api {
 	        // Capability checking
 		require_capability('mod/forum:viewdiscussion', $context);
 
-		$sql 	= 'SELECT p.message, u.firstname, u.lastname '
+		$sql 	= 'SELECT p.message, u.firstname, u.lastname, p.modified '
 			. 'FROM {forum_posts} p '
 			. 'JOIN {user} u ON u.id = p.userid '
 			. 'WHERE p.discussion = ? AND p.parent <> 0 '
@@ -665,7 +676,8 @@ class local_question_ws_external extends external_api {
 		foreach ($posts as $post) {
 			$answers[] = array(
 				'answer_text' => strip_tags($post->message),
-				'user_full_name' => $post->firstname . ' ' . $post->lastname
+				'user_full_name' => $post->firstname . ' ' . $post->lastname,
+				'time_modified' => $post->modified,
 			);
 		}
 
