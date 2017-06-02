@@ -279,14 +279,12 @@ class local_question_ws_external extends external_api {
 		$section_id = course_add_cm_to_section($newcm->course, $newcm->coursemodule, $newcm->section);
 		
 		// Trigger mod_created event with information about this module
-		$eventname = 'mod_created';
-		$eventdata = new stdClass();
-		$eventdata->modulename = $module->name;
-		$eventdata->name       = $newcm->name;
-		$eventdata->cmid       = $newcm->coursemodule;
-		$eventdata->courseid   = $course->id;
-		$eventdata->userid     = 0;
-		events_trigger($eventname, $eventdata);
+		// Api create_from_cm expects modname and id properties
+		$eventdata = clone $newcm;
+		$eventdata->modname = $newcm->modulename;
+		$eventdata->id = $newcm->coursemodule;
+		$event = \core\event\course_module_created::create_from_cm($eventdata, context_module::instance($newcm->coursemodule));
+		$event->trigger();
 
 		return array('forum_id' => $ret);
 	}
