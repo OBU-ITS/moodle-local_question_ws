@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -17,11 +18,25 @@
 /**
  * Question web service plugin
  * @package   local_question_ws
- * @copyright 2014 Oxford Brookes University
- * @author    Peter Andrew
+ * @copyright 2019 Oxford Brookes University
+ * @author    Peter Welham
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['privacy:metadata'] = 'The Question web service plugin is an interface to Moodle forums and does not itself store any personal data.';
+namespace local_question_ws\privacy;
 
-$string['pluginname'] = 'Question web service';
+defined('MOODLE_INTERNAL') || die();
+
+// Privacy Subsystem implementing null_provider
+class provider implements \core_privacy\local\metadata\null_provider {
+
+	/**
+	* Get the language string identifier with the component's language
+	* file to explain why this plugin stores no data.
+	*
+	* @return  string
+	*/
+	public static function get_reason() : string {
+		return 'privacy:metadata';
+	}
+}
