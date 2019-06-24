@@ -55,39 +55,24 @@ class local_question_ws_external extends external_api {
 		$sql	= 'SELECT '
 			. ' c.id,'
 			. ' c.fullname,'
-			. ' substr(c.shortname,8,3) as startmonth,'
-			. ' substr(c.shortname,11,2) as startyear,'
-			. ' substr(c.shortname,14,3) as endmonth,'
-			. ' substr(c.shortname,17,2) as endyear '
+			. ' c.startdate,'
+			. ' c.enddate '
 			. 'FROM {course} c '
 			. 'JOIN {enrol} e ON e.courseid = c.id '
 			. 'JOIN {user_enrolments} ue ON ue.enrolid = e.id '
 			. 'WHERE'
 			. ' ue.userid = ? AND'
 			. ' c.visible = 1 AND'
-			. " substr(c.shortname, 7, 1) = ' ' AND"
-			. " substr(c.shortname, 13, 1) = '-' AND"
-			. ' length(c.shortname) >= 18';
+			. ' ((substr(c.shortname, 7, 1) = " " AND'
+			. ' substr(c.shortname, 13, 1) = "-") OR'
+			. ' substr(c.shortname, 9, 1) = " ")';
 		$db_ret = $DB->get_records_sql($sql, array($USER->id));
 
 		$courses = array();
+		$this_month = date('Ym');
 		foreach ($db_ret as $row) {
 			// Check whether course is currently running
-			$course_start_timestamp = strtotime(
-				'01 ' .
-				$row->startmonth . ' ' .
-				$row->startyear
-			);
-
-			$course_end_timestamp = strtotime(
-				'31 ' .
-				$row->endmonth . ' ' .
-				$row->endyear
-			);
-
-			$currtime = time();
-
-			if ($currtime < $course_start_timestamp || $currtime > $course_end_timestamp) {
+			if (($this_month < date('Ym', $row->startdate)) || ($this_month > date('Ym', $row->enddate))) {
 				continue;
 			}
 
@@ -107,11 +92,10 @@ class local_question_ws_external extends external_api {
 				}
 			}
 
-			// Remove run dates from course title
-			$run_dates_search = '(' . $row->startmonth;
-			$run_dates_pos = strpos($row->fullname, $run_dates_search);
+			// Remove any run dates from course title
+			$run_dates_pos = strpos($row->fullname, ' (');
 			if ($run_dates_pos !== false) {
-				$row->fullname = substr($row->fullname, 0, $run_dates_pos - 1);
+				$row->fullname = substr($row->fullname, 0, $run_dates_pos);
 			}
 
 			$courses[] = array(
