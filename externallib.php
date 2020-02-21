@@ -52,27 +52,21 @@ class local_question_ws_external extends external_api {
 		$module_leader_role = $DB->get_record('role', array('shortname'=>'course_leader'), 'id', MUST_EXIST);
 
 		// Build and execute course query
-		$sql	= 'SELECT '
-			. ' c.id,'
-			. ' c.fullname,'
-			. ' c.startdate,'
-			. ' c.enddate '
+		$sql = 'SELECT c.id, c.fullname, c.idnumber, c.startdate, c.enddate '
 			. 'FROM {course} c '
 			. 'JOIN {enrol} e ON e.courseid = c.id '
 			. 'JOIN {user_enrolments} ue ON ue.enrolid = e.id '
 			. 'WHERE'
-			. ' ue.userid = ? AND'
 			. ' c.visible = 1 AND'
-			. ' ((substr(c.shortname, 7, 1) = " " AND'
-			. ' substr(c.shortname, 13, 1) = "-") OR'
-			. ' substr(c.shortname, 9, 1) = " ")';
+			. ' ue.userid = ?';
 		$db_ret = $DB->get_records_sql($sql, array($USER->id));
 
 		$courses = array();
 		$this_month = date('Ym');
 		foreach ($db_ret as $row) {
-			// Check whether course is currently running
-			if (($this_month < date('Ym', $row->startdate)) || ($this_month > date('Ym', $row->enddate))) {
+			
+			// If a module, check that it's currently running
+			if ((strpos($row->idnumber, '.') !== false) && (($this_month < date('Ym', $row->startdate)) || ($this_month > date('Ym', $row->enddate)))) {
 				continue;
 			}
 
